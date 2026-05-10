@@ -16,11 +16,11 @@ namespace DevBlog.Infrastructure.Services
         {
             _configuration = configuration;
         }
-        public AuthResponseDto GenerateToken(ApplicationUser user)
+        public AuthResponseDto GenerateToken(ApplicationUser user, IList<string> roles)
         {
             var expiration = DateTime.UtcNow.AddHours
                 (Convert.ToDouble(_configuration["Jwt:ExpirationHours"]));
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
@@ -31,7 +31,12 @@ namespace DevBlog.Infrastructure.Services
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.DisplayName),
                 new Claim(ClaimTypes.Email, user.Email)
+
             };
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }   
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var tokenGenerator = new JwtSecurityToken(
@@ -76,7 +81,7 @@ namespace DevBlog.Infrastructure.Services
                 ValidateAudience = true,
                 ValidateIssuer = true,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"])),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:key"])),
                 ValidateLifetime = false,
                 ValidIssuer = _configuration["Jwt:Issuer"],
                 ValidAudience = _configuration["Jwt:Audience"],

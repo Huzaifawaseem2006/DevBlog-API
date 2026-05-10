@@ -17,12 +17,18 @@ namespace DevBlog.Infrastructure.Repositories
         }
         public async Task<Post> GetByIdAsync(Guid id)
         {
-            return await _context.Posts.Include(p => p.Author).FirstOrDefaultAsync(p => p.Id == id);
+            return await _context.Posts
+                         .Include(p => p.Author)
+                         .Include(p => p.Tags)
+                         .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<IEnumerable<Post>> GetAllAsync()
         {
-            return await _context.Posts.Include(p => p.Author).ToListAsync();
+            return await _context.Posts
+                         .Include(p => p.Author)
+                         .Include(p => p.Tags)
+                         .ToListAsync();
 
         }
 
@@ -48,6 +54,7 @@ namespace DevBlog.Infrastructure.Repositories
         {
             return await _context.Posts
                         .Include(p => p.Author)
+                        .Include(p => p.Tags)
                         .Where(p => p.AuthorId == authorId)
                         .ToListAsync();
         }
@@ -57,6 +64,7 @@ namespace DevBlog.Infrastructure.Repositories
             var totalPosts = await _context.Posts.CountAsync();
             var posts = await _context.Posts
                                 .Include(p => p.Author)
+                                .Include(p => p.Tags)
                                 .Skip((pageNumber - 1) * pageSize)
                                 .Take(pageSize)
                                 .ToListAsync();

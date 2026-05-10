@@ -7,7 +7,7 @@ namespace DevBlog.Core.Interfaces
 {
     public interface ITokenService
     {
-        AuthResponseDto GenerateToken(ApplicationUser user);
+        AuthResponseDto GenerateToken(ApplicationUser user, IList<string> roles);
         string GenerateRefreshToken();
 
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);

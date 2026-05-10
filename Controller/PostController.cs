@@ -60,7 +60,8 @@ namespace DevBlog.Controller
         public async Task<IActionResult> DeletePost(Guid id)
         {
             var authorId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _postService.DeletePostAsync(id, authorId);
+            var isAdmin = User.IsInRole("Admin");
+            await _postService.DeletePostAsync(id, authorId,isAdmin);
             return NoContent();
 
         }

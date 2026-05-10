@@ -22,6 +22,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddIdentityCore<ApplicationUser>()
     .AddRoles<ApplicationRole>()
     .AddEntityFrameworkStores<AppDbContext>();
@@ -51,6 +55,41 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider
+                          .GetRequiredService<RoleManager<ApplicationRole>>();
+    var userManager = scope.ServiceProvider
+                          .GetRequiredService<UserManager<ApplicationUser>>();
+
+    // Create roles if they don't exist
+    string[] roles = { "Admin", "User" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new ApplicationRole { Name = role });
+        }
+    }
+
+    // Create admin user if doesn't exist
+    var adminEmail = "admin@devblog.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            DisplayName = "Admin"
+        };
+        await userManager.CreateAsync(adminUser, "Admin@1234");
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
+}
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

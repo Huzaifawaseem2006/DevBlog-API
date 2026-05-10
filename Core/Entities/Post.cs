@@ -12,5 +12,11 @@ namespace DevBlog.Core.Entities
         public Guid AuthorId { get; set; }
         // Navigation property to the author (ApplicationUser)
         public ApplicationUser Author { get; set; }
+
+        // Navigation property to the comments
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        public ICollection<Tag> Tags { get; set; } = new List<Tag>();   
+
     }
 }

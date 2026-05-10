@@ -14,7 +14,8 @@ namespace DevBlog.Core.Helpers
                 Content = post.Content,
                 Slug = post.Slug,
                 AuthorName = post.Author?.DisplayName ?? "Unknown",
-                CreatedAt = post.CreatedAt
+                CreatedAt = post.CreatedAt,
+                Tags = post.Tags?.Select(t => t.ToDto()).ToList() ?? new List<TagDetailsDto>()
             };
         }
 

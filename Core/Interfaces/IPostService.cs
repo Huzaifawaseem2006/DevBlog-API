@@ -12,7 +12,7 @@ namespace DevBlog.Core.Interfaces
             Task<IEnumerable<PostDetailsDto>> GetAllPostsAsync();
             Task<PostDetailsDto> CreatePostAsync(CreatePostDto post, Guid authorId);
             Task UpdatePostAsync(UpdatePostDto post, Guid postId, Guid authorId);
-            Task DeletePostAsync(Guid id, Guid authorId);
+            Task DeletePostAsync(Guid id, Guid authorId, bool isAdmin);
 
             Task<IEnumerable<PostDetailsDto>> GetPostByAuthorIdAsync(Guid authorId);
 

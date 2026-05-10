@@ -32,7 +32,9 @@ namespace DevBlog.Infrastructure.Services
             IdentityResult result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                var authResponse = _tokenService.GenerateToken(user);
+                await _userManager.AddToRoleAsync(user, "User");
+                var roles = await _userManager.GetRolesAsync(user);
+                var authResponse = _tokenService.GenerateToken(user,roles);
                 user.RefreshToken = authResponse.RefreshToken;
                 user.RefreshTokenExpiration = authResponse.RefreshTokenExpiration;
                 await _userManager.UpdateAsync(user);
@@ -54,7 +56,8 @@ namespace DevBlog.Infrastructure.Services
             {
                 throw new Exception("Invalid email or password.");
             }
-            var authResponse = _tokenService.GenerateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var authResponse = _tokenService.GenerateToken(user,roles);
             user.RefreshToken = authResponse.RefreshToken;
             user.RefreshTokenExpiration = authResponse.RefreshTokenExpiration;
             await _userManager.UpdateAsync(user);
@@ -76,7 +79,8 @@ namespace DevBlog.Infrastructure.Services
             {
                 throw new Exception("Invalid token.");
             }
-            var authResponse = _tokenService.GenerateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var authResponse = _tokenService.GenerateToken(user, roles);
             user.RefreshToken = authResponse.RefreshToken;
             user.RefreshTokenExpiration = authResponse.RefreshTokenExpiration;
             await _userManager.UpdateAsync(user);

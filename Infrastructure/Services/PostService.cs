@@ -10,9 +10,11 @@ namespace DevBlog.Infrastructure.Services
     public class PostService : IPostService
     {
         private readonly IPostRepository _postRepository;
-        public PostService(IPostRepository postRepository)
+        private readonly ITagRepository _tagRepository;
+        public PostService(IPostRepository postRepository, ITagRepository tagRepository)
         {
             _postRepository = postRepository;
+            _tagRepository = tagRepository;
         }
 
         public async Task<PostDetailsDto> GetPostByIdAsync(Guid id)
@@ -34,8 +36,11 @@ namespace DevBlog.Infrastructure.Services
         public async Task<PostDetailsDto> CreatePostAsync(CreatePostDto createPostDto, Guid authorId)
         {
             var post = PostMapping.ToPost(createPostDto, authorId);
+            var tags = await _tagRepository.GetTagsByIdAsync(createPostDto.TagIds);
+            post.Tags = tags.ToList();
             await _postRepository.AddAsync(post);
-            var postDetailsDto = PostMapping.ToPostDetailsDto(post);
+            var savedPost = await _postRepository.GetByIdAsync(post.Id);
+            var postDetailsDto = PostMapping.ToPostDetailsDto(savedPost);
 
             return postDetailsDto;
 
@@ -52,21 +57,24 @@ namespace DevBlog.Infrastructure.Services
             {
                 throw new Exception("You are not authorized to update this post.");
             }
+            var tags = await _tagRepository.GetTagsByIdAsync(post.TagIds);
+            existingPost.Tags = tags.ToList();
             var updatedPost = PostMapping.ToPost(post, existingPost);
             await _postRepository.UpdateAsync(updatedPost);
         }
 
-        public async Task DeletePostAsync(Guid id, Guid authorId)
+        public async Task DeletePostAsync(Guid id, Guid authorId,bool isAdmin)
         {
             var post = await _postRepository.GetByIdAsync(id);
             if (post == null)
             {
                 throw new Exception($"Post with id {id} not found.");
             }
-            if (post.AuthorId != authorId)
+            if (post.AuthorId != authorId && !isAdmin)
             {
                 throw new Exception("You are not authorized to delete this post.");
             }
+          
             await _postRepository.DeleteAsync(post);
         }
 
