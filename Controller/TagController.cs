@@ -18,56 +18,57 @@ namespace DevBlog.Controller
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllTagsAsync()
+        public async Task<IActionResult> GetAllTagsAsync(CancellationToken token)
         {
-            var tags = await _tagService.GetAllTagsAsync();
-            return Ok(tags);
-
+            var result = await _tagService.GetAllTagsAsync(token);
+            return Ok(result.Value);
         }
 
         [HttpGet("{id}")]
         [ActionName("GetTagById")]
-        public async Task<IActionResult> GetTagByIdAsync(Guid id)
+        public async Task<IActionResult> GetTagByIdAsync(Guid id, CancellationToken token)
         {
-            var tag = await _tagService.GetTagByIdAsync(id);
-            return Ok(tag);
+            var result = await _tagService.GetTagByIdAsync(id, token);
+            return Ok(result.Value);
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateTagAsync([FromBody] CreateTagDto createTagDto)
+        public async Task<IActionResult> CreateTagAsync([FromBody] CreateTagDto createTagDto, CancellationToken token)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            var tag = await _tagService.CreateTagAsync(createTagDto);
-            return CreatedAtAction("GetTagById", new { id = tag.Id }, tag);
+
+            var result = await _tagService.CreateTagAsync(createTagDto, token);
+            return CreatedAtAction("GetTagById", new { id = result.Value.Id }, result.Value);
         }
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateTagAsync(Guid id, [FromBody] UpdateTagDto updateTagDto)
+        public async Task<IActionResult> UpdateTagAsync(Guid id, [FromBody] UpdateTagDto updateTagDto, CancellationToken token)
         {
-            if (!ModelState.IsValid)
+
+            var result = await _tagService.UpdateTagAsync(updateTagDto, id, token);
+            if (!result.Success)
             {
-                return BadRequest(ModelState);
+                return BadRequest(result.Error);
             }
-            await _tagService.UpdateTagAsync(updateTagDto, id);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteTagAsync(Guid id)
+        public async Task<IActionResult> DeleteTagAsync(Guid id, CancellationToken token)
         {
-            await _tagService.DeleteTagAsync(id);
+            var result = await _tagService.DeleteTagAsync(id, token);
+            if (!result.Success)
+            {
+                return BadRequest(result.Error);
+            }
             return NoContent();
         }
 
         [HttpGet("post/{postId}")]
-        public async Task<IActionResult> GetTagsByPostIdAsync(Guid postId)
+        public async Task<IActionResult> GetTagsByPostIdAsync(Guid postId, CancellationToken token)
         {
-            var tags = await _tagService.GetTagsByPostIdAsync(postId);
-            return Ok(tags);
+            var result = await _tagService.GetTagsByPostIdAsync(postId, token);
+            return Ok(result.Value);
 
         }
     }

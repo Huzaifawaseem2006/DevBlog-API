@@ -4,6 +4,7 @@ using DevBlog.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using DevBlog.Core.Helpers;
 
 
 namespace DevBlog.Controller
@@ -18,59 +19,89 @@ namespace DevBlog.Controller
             _postService = postService;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllPosts(CancellationToken token,[FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var posts = await _postService.GetAllPostsPaginatedAsync(page, pageSize);
-            return Ok(posts);
+            var result = await _postService.GetAllPostsPaginatedAsync(page, pageSize, token);
+            if (!result.Success)
+            {
+                return NotFound(result.Error);
+            }
+            return Ok(result.Value);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetPostById(Guid id)
+        public async Task<IActionResult> GetPostById(Guid id,CancellationToken token)
         {
-            var post = await _postService.GetPostByIdAsync(id);
-            return Ok(post);
+            var result = await _postService.GetPostByIdAsync(id, token);
+            if (!result.Success)
+            {
+                return NotFound(result.Error);
+            }
+            return Ok(result.Value);
         }
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreatePost([FromBody] CreatePostDto createPostDto)
+        public async Task<IActionResult> CreatePost([FromBody] CreatePostDto createPostDto,CancellationToken token)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            
             var authorId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var post = await _postService.CreatePostAsync(createPostDto, authorId);
-            return CreatedAtAction(nameof(GetPostById), new { id = post.Id }, post);
+            var result = await _postService.CreatePostAsync(createPostDto, authorId, token);
+            if (!result.Success)
+            {
+                return BadRequest(result.Error);
+            }
+
+            return CreatedAtAction(nameof(GetPostById), new { id = result.Value.Id }, result.Value);
         }
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdatePost(Guid id, [FromBody] UpdatePostDto updatePostDto)
+        public async Task<IActionResult> UpdatePost(Guid id, [FromBody] UpdatePostDto updatePostDto,CancellationToken token)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+          
             var authorId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            await _postService.UpdatePostAsync(updatePostDto, id, authorId);
+            var result = await _postService.UpdatePostAsync(updatePostDto, id, authorId, token);
+            if (!result.Success)
+            {
+                return BadRequest(result.Error);
+            }
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> DeletePost(Guid id)
+        public async Task<IActionResult> DeletePost(Guid id,CancellationToken token)
         {
             var authorId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             var isAdmin = User.IsInRole("Admin");
-            await _postService.DeletePostAsync(id, authorId,isAdmin);
+            var result = await _postService.DeletePostAsync(id, authorId, isAdmin, token);
+            if (!result.Success)
+            {
+                return BadRequest(result.Error);
+            }
             return NoContent();
 
         }
 
         [HttpGet("author/{authorId}")]
-        public async Task<IActionResult> GetPostsByAuthorId(Guid authorId)
+        public async Task<IActionResult> GetPostsByAuthorId(Guid authorId,CancellationToken token)
         {
-            var posts = await _postService.GetPostByAuthorIdAsync(authorId);
-            return Ok(posts);
+            var result = await _postService.GetPostByAuthorIdAsync(authorId, token);
+            if (!result.Success)
+            {
+                return NotFound(result.Error);
+            }
+            return Ok(result.Value);
+        }
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchPostsAsync([FromQuery] string searchTerm,CancellationToken token)
+        {
+            var result = await _postService.SearchPostsAsync(searchTerm, token);
+            if (!result.Success)
+            {
+                return NotFound(result.Error);
+            }
+            return Ok(result.Value);
+
         }
 
     }

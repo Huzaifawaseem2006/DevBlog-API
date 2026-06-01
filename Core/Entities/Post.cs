@@ -18,5 +18,7 @@ namespace DevBlog.Core.Entities
 
         public ICollection<Tag> Tags { get; set; } = new List<Tag>();   
 
+        public ICollection<ApplicationUser> LikedByUsers { get; set; } = new List<ApplicationUser>();
+
     }
 }

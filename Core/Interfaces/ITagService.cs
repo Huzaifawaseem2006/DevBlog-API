@@ -1,18 +1,19 @@
 ﻿using DevBlog.Core.Entities;
 using DevBlog.Core.Dtos;
+using DevBlog.Core.Helpers;
 
 namespace DevBlog.Core.Interfaces
 {
     public interface ITagService
     {
-        public Task<IEnumerable<TagDetailsDto>> GetAllTagsAsync();
-        public Task<TagDetailsDto> GetTagByIdAsync(Guid id);
-        public Task<TagDetailsDto> CreateTagAsync(CreateTagDto createTagDto);
+        public Task<Result<IEnumerable<TagDetailsDto>>> GetAllTagsAsync(CancellationToken token);
+        public Task<Result<TagDetailsDto>> GetTagByIdAsync(Guid id, CancellationToken token);
+        public Task<Result<TagDetailsDto>> CreateTagAsync(CreateTagDto createTagDto, CancellationToken token);
 
-        public Task UpdateTagAsync(UpdateTagDto updateTagDto,Guid id);
+        public Task<Result<bool>> UpdateTagAsync(UpdateTagDto updateTagDto, Guid id, CancellationToken token);
 
-        public Task DeleteTagAsync(Guid id);
+        public Task<Result<bool>> DeleteTagAsync(Guid id, CancellationToken token);
 
-        public Task<IEnumerable<TagDetailsDto>> GetTagsByPostIdAsync(Guid postId);
+        public Task<Result<IEnumerable<TagDetailsDto>>> GetTagsByPostIdAsync(Guid postId, CancellationToken token);
     }
 }

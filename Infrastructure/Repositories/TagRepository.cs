@@ -12,51 +12,51 @@ namespace DevBlog.Infrastructure.Repositories
         {
             _context = context;
         }
-        public async Task AddAsync(Tag entity)
+        public async Task AddAsync(Tag entity, CancellationToken token)
         {
-            await _context.Tags.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            await _context.Tags.AddAsync(entity, token);
+            await _context.SaveChangesAsync(token);
         }
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, CancellationToken token)
         {
             var tag = await _context.Tags.FindAsync(id);
             if (tag != null)
             {
                 _context.Tags.Remove(tag);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(token);
             }
         }
-        public async Task<IEnumerable<Tag>> GetAllAsync()
+        public async Task<IEnumerable<Tag>> GetAllAsync(CancellationToken token)
         {
-            return await _context.Tags.ToListAsync();
+            return await _context.Tags.ToListAsync(token);
         }
-        public async Task<Tag> GetByIdAsync(Guid id)
+        public async Task<Tag> GetByIdAsync(Guid id, CancellationToken token)
         {
-            return await _context.Tags.FindAsync(id);
+            return await _context.Tags.FindAsync(new object[] { id }, token);
         }
-        public async Task UpdateAsync(Tag entity)
+        public async Task UpdateAsync(Tag entity, CancellationToken token)
         {
             _context.Tags.Update(entity);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
         }
 
-        public async Task DeleteAsync(Tag entity)
+        public async Task DeleteAsync(Tag entity, CancellationToken token)
         {
             _context.Tags.Remove(entity);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(token);
         }
-        public async Task<IEnumerable<Tag>> GetTagsByPostIdAsync(Guid postId)
+        public async Task<IEnumerable<Tag>> GetTagsByPostIdAsync(Guid postId, CancellationToken token)
         {
             return await _context.Tags
                 .Where(t => t.Posts.Any(p => p.Id == postId))
-                .ToListAsync();
+                .ToListAsync(token);
         }
 
-        public async Task<IEnumerable<Tag>> GetTagsByIdAsync(IEnumerable<Guid> tagIds)
+        public async Task<IEnumerable<Tag>> GetTagsByIdAsync(IEnumerable<Guid> tagIds, CancellationToken token)
         {
             return await _context.Tags
                 .Where(t => tagIds.Contains(t.Id))
-                .ToListAsync();
+                .ToListAsync(token);
         }
 
     }

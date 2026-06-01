@@ -10,6 +10,8 @@ namespace DevBlog.Core.Entities
 
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime RefreshTokenExpiration { get; set; }
+
+        public ICollection<Post> LikedPosts { get; set; } = new List<Post>();
     }
 
 

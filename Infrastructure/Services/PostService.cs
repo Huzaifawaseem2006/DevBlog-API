@@ -17,85 +17,93 @@ namespace DevBlog.Infrastructure.Services
             _tagRepository = tagRepository;
         }
 
-        public async Task<PostDetailsDto> GetPostByIdAsync(Guid id)
+        public async Task<Result<PostDetailsDto>> GetPostByIdAsync(Guid id, CancellationToken token)
         {
-            var post = await _postRepository.GetByIdAsync(id);
+            var post = await _postRepository.GetByIdAsync(id, token);
             if (post == null)
             {
-                throw new Exception($"Post with id {id} not found.");
+                return Result<PostDetailsDto>.Fail($"Post with id {id} not found.");
             }
-            return PostMapping.ToPostDetailsDto(post);
+            return Result<PostDetailsDto>.Ok(PostMapping.ToPostDetailsDto(post));
         }
 
-        public async Task<IEnumerable<PostDetailsDto>> GetAllPostsAsync()
+        public async Task<Result<IEnumerable<PostDetailsDto>>> GetAllPostsAsync(CancellationToken token)
         {
-            var posts = await _postRepository.GetAllAsync();
-            return posts.Select(PostMapping.ToPostDetailsDto);
+            var posts = await _postRepository.GetAllAsync(token);
+            return Result<IEnumerable<PostDetailsDto>>.Ok(posts.Select(PostMapping.ToPostDetailsDto));
         }
 
-        public async Task<PostDetailsDto> CreatePostAsync(CreatePostDto createPostDto, Guid authorId)
+        public async Task<Result<PostDetailsDto>> CreatePostAsync(CreatePostDto createPostDto, Guid authorId, CancellationToken token)
         {
             var post = PostMapping.ToPost(createPostDto, authorId);
-            var tags = await _tagRepository.GetTagsByIdAsync(createPostDto.TagIds);
+            var tags = await _tagRepository.GetTagsByIdAsync(createPostDto.TagIds, token);
             post.Tags = tags.ToList();
-            await _postRepository.AddAsync(post);
-            var savedPost = await _postRepository.GetByIdAsync(post.Id);
+            await _postRepository.AddAsync(post, token);
+            var savedPost = await _postRepository.GetByIdAsync(post.Id, token);
             var postDetailsDto = PostMapping.ToPostDetailsDto(savedPost);
 
-            return postDetailsDto;
+            return Result<PostDetailsDto>.Ok(postDetailsDto);
 
         }
 
-        public async Task UpdatePostAsync(UpdatePostDto post, Guid postId, Guid authorId)
+        public async Task<Result<bool>> UpdatePostAsync(UpdatePostDto post, Guid postId, Guid authorId, CancellationToken token)
         {
-            var existingPost = await _postRepository.GetByIdAsync(postId);
+            var existingPost = await _postRepository.GetByIdAsync(postId, token);
             if (existingPost == null)
             {
-                throw new Exception($"Post with id {postId} not found.");
+                return Result<bool>.Fail($"Post with id {postId} not found.");
             }
             if (existingPost.AuthorId != authorId)
             {
-                throw new Exception("You are not authorized to update this post.");
+                return Result<bool>.Fail("You are not authorized to update this post.");
             }
-            var tags = await _tagRepository.GetTagsByIdAsync(post.TagIds);
+            var tags = await _tagRepository.GetTagsByIdAsync(post.TagIds, token);
             existingPost.Tags = tags.ToList();
             var updatedPost = PostMapping.ToPost(post, existingPost);
-            await _postRepository.UpdateAsync(updatedPost);
+            await _postRepository.UpdateAsync(updatedPost, token);
+            return Result<bool>.Ok(true);
         }
 
-        public async Task DeletePostAsync(Guid id, Guid authorId,bool isAdmin)
+        public async Task<Result<bool>> DeletePostAsync(Guid id, Guid authorId, bool isAdmin, CancellationToken token)
         {
-            var post = await _postRepository.GetByIdAsync(id);
+            var post = await _postRepository.GetByIdAsync(id, token);
             if (post == null)
             {
-                throw new Exception($"Post with id {id} not found.");
+                return Result<bool>.Fail($"Post with id {id} not found.");
             }
             if (post.AuthorId != authorId && !isAdmin)
             {
-                throw new Exception("You are not authorized to delete this post.");
+                return Result<bool>.Fail("You are not authorized to delete this post.");
             }
-          
-            await _postRepository.DeleteAsync(post);
+
+            await _postRepository.DeleteAsync(post, token);
+            return Result<bool>.Ok(true);
         }
 
-        public async Task<IEnumerable<PostDetailsDto>> GetPostByAuthorIdAsync(Guid authorId)
+        public async Task<Result<IEnumerable<PostDetailsDto>>> GetPostByAuthorIdAsync(Guid authorId, CancellationToken token)
         {
-            var posts = await _postRepository.GetPostsByAuthorAsync(authorId);
-            return posts.Select(PostMapping.ToPostDetailsDto);
+            var posts = await _postRepository.GetPostsByAuthorAsync(authorId, token);
+            return Result<IEnumerable<PostDetailsDto>>.Ok(posts.Select(PostMapping.ToPostDetailsDto));
         }
 
-        public async Task<PagedResult<PostDetailsDto>> GetAllPostsPaginatedAsync(int pageNumber, int pageSize)
+        public async Task<Result<PagedResult<PostDetailsDto>>> GetAllPostsPaginatedAsync(int pageNumber, int pageSize, CancellationToken token)
         {
-            var pagedPosts = await _postRepository.GetAllPostsPaginatedAsync(pageNumber, pageSize);
+            var pagedPosts = await _postRepository.GetAllPostsPaginatedAsync(pageNumber, pageSize, token);
             var postDetailsDtos = pagedPosts.Items.Select(PostMapping.ToPostDetailsDto).ToList();
-            return new PagedResult<PostDetailsDto>
+            return Result<PagedResult<PostDetailsDto>>.Ok(new PagedResult<PostDetailsDto>
             {
                 Items = postDetailsDtos,
                 TotalRecords = pagedPosts.TotalRecords,
                 PageNumber = pageNumber,
                 PageSize = pageSize,
                 TotalPages = pagedPosts.TotalPages
-            };
+            });
+        }
+
+        public async Task<Result<IEnumerable<PostDetailsDto>>> SearchPostsAsync(string searchTerm, CancellationToken token)
+        {
+            var posts = await _postRepository.SearchPostsAsync(searchTerm, token);
+            return Result<IEnumerable<PostDetailsDto>>.Ok(posts.Select(PostMapping.ToPostDetailsDto));
         }
     }
 }

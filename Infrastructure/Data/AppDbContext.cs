@@ -32,6 +32,11 @@ namespace DevBlog.Infrastructure.Data
                  .HasMany(p => p.Tags)
                 .WithMany(t => t.Posts)
                 .UsingEntity(j => j.ToTable("PostTags"));
+
+            builder.Entity<Post>()
+                 .HasMany(p => p.LikedByUsers)
+                 .WithMany(u => u.LikedPosts)
+                 .UsingEntity(j => j.ToTable("PostLikes"));
         }
 
     }

@@ -8,14 +8,17 @@ namespace DevBlog.Core.Interfaces
 {
     public interface IPostService
     {
-            Task<PostDetailsDto> GetPostByIdAsync(Guid id);
-            Task<IEnumerable<PostDetailsDto>> GetAllPostsAsync();
-            Task<PostDetailsDto> CreatePostAsync(CreatePostDto post, Guid authorId);
-            Task UpdatePostAsync(UpdatePostDto post, Guid postId, Guid authorId);
-            Task DeletePostAsync(Guid id, Guid authorId, bool isAdmin);
+        Task<Result<PostDetailsDto>> GetPostByIdAsync(Guid id, CancellationToken token);
+        Task<Result<IEnumerable<PostDetailsDto>>> GetAllPostsAsync(CancellationToken token);
+        Task<Result<PostDetailsDto>> CreatePostAsync(CreatePostDto post, Guid authorId, CancellationToken token);
+        Task<Result<bool>> UpdatePostAsync(UpdatePostDto post, Guid postId, Guid authorId, CancellationToken token);
+        Task<Result<bool>> DeletePostAsync(Guid id, Guid authorId, bool isAdmin, CancellationToken token);
 
-            Task<IEnumerable<PostDetailsDto>> GetPostByAuthorIdAsync(Guid authorId);
+        Task<Result<IEnumerable<PostDetailsDto>>> GetPostByAuthorIdAsync(Guid authorId, CancellationToken token);
 
-            Task<PagedResult<PostDetailsDto>> GetAllPostsPaginatedAsync(int pageNumber, int pageSize);
+        Task<Result<PagedResult<PostDetailsDto>>> GetAllPostsPaginatedAsync(int pageNumber, int pageSize, CancellationToken token);
+
+        Task<Result<IEnumerable<PostDetailsDto>>> SearchPostsAsync(string searchTerm, CancellationToken token);
+
     }
 }
